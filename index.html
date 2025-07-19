@@ -656,20 +656,20 @@
             font-style: italic;
         }
         
-      .global-timer {
-    position: fixed;
-    top: 80px;
-    left: 20px;
-    font-size: 1.2rem;
-    color: #e91e63;
-    font-weight: bold;
-    padding: 8px 12px;
-    background-color: white;
-    border-radius: 20px;
-    box-shadow: 0 3px 10px rgba(0,0,0,0.1);
-    z-index: 5;
-    display: none; /* Hidden by default */
-}
+        .global-timer {
+            position: fixed;
+            top: 80px;
+            left: 20px;
+            font-size: 1.2rem;
+            color: #e91e63;
+            font-weight: bold;
+            padding: 8px 12px;
+            background-color: white;
+            border-radius: 20px;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.1);
+            z-index: 5;
+            display: none; /* Hidden by default */
+        }
         
         /* Sound controls */
         .sound-controls {
@@ -721,7 +721,7 @@
             <div class="logo-small">zkCrush</div>
             <div class="user-profile" id="userProfile"></div>
         </div>
-            <div class="timer" id="globalTimer"></div>
+        <div class="global-timer" id="globalTimer"></div>
         <div class="main-content">
             <div class="swipe-count" id="swipeCount">Swipes left today: 11</div>
 
@@ -730,7 +730,6 @@
                 <div class="no-more-cards" id="noMoreCards" style="display: none;">
                     <h3 class="no-more-title">Proof of Gooner</h3>
                     <p class="no-more-text">You exhausted your swipes! Touch grass and come back tomorrow.</p>
-                    
                 </div>
             </div>
         </div>
@@ -780,7 +779,7 @@
     <script>
         const DAILY_SWIPE_LIMIT = 11;
 
-        // Sample baddies data - 23 profiles
+        // Sample baddies data - 24 profiles
         const baddies = [
             { id: 1, name: "Alina", age: 24, img: "./Avatars/alina.jpg", bio: "Let's create something magical together!", interests: ["painting", "hiking", "adventure"] },
             { id: 2, name: "Aurora", age: 22, img: "./Avatars/aurora.jpg", bio: "Artist and coffee enthusiast. Let's visit galleries and cafés together!", interests: ["art", "coffee", "galleries"] },
@@ -804,7 +803,12 @@
             { id: 20, name: "Fidesire", age: 26, img: "./Avatars/fidesire.jpg", bio: "Historian and antique collector. Let's uncover the past together!", interests: ["history", "antiques", "artifacts"] },
             { id: 21, name: "Angel", age: 24, img: "./Avatars/angel.jpg", bio: "Pilot and travel enthusiast. Ready for takeoff?", interests: ["aviation", "travel", "flying"] },
             { id: 22, name: "Cocowaves", age: 25, img: "./Avatars/coco.jpg", bio: "Winemaker and sommelier. Let's taste the good life!", interests: ["wine", "winemaking", "tasting"] },
-            { id: 23, name: "Deli", age: 23, img: "./Avatars/deli.jpg", bio: "Florist and garden designer. Let's make love bloom!", interests: ["flowers", "gardening", "design"] }
+            { id: 23, name: "Deli", age: 23, img: "./Avatars/deli.jpg", bio: "Florist and garden designer. Let's make love bloom!", interests: ["flowers", "gardening", "design"] },
+            { id: 24, name: "Addy", age: 22, img: "./Avatars/Addy.webp", bio: "Cracked Dev that likes eggs", interests: ["crypto", "blockchain", "trading"], uniqueReplies: [
+                "Hey there do u like Eggs?",
+                "28 Eggs?",
+                "Egg"
+            ] }
         ];
 
         // App state
@@ -843,7 +847,7 @@
         const sendBtn = document.getElementById('sendBtn');
         const userProfile = document.getElementById('userProfile');
         const noMoreCards = document.getElementById('noMoreCards');
-        const resetTimer = document.getElementById('resetTimer');
+        const globalTimer = document.getElementById('globalTimer');
         const typingIndicator = document.getElementById('typingIndicator');
         const soundBtn = document.getElementById('soundBtn');
         
@@ -954,7 +958,7 @@
                 const hours = Math.floor(timeLeft / (1000 * 60 * 60));
                 const minutes = Math.floor((timeLeft % (1000 * 60 * 60)) / (1000 * 60));
                 const seconds = Math.floor((timeLeft % (1000 * 60)) / 1000);
-                resetTimer.textContent = `Next reset in ${hours}h ${minutes}m ${seconds}s`;
+                timerElement.textContent = `Next reset in ${hours}h ${minutes}m ${seconds}s`;
             }
             
             updateTimer();
@@ -1314,9 +1318,6 @@
         function showNoMoreCards(lastSwipeDate) {
             cardsContainer.innerHTML = '';
             noMoreCards.style.display = 'block';
-    
-    // Get reference to the timer element inside noMoreCards
-    const timerElement = noMoreCards.querySelector('.timer');
             
             // Create the Proof of Gooner message element
             const proofElement = document.createElement('div');
@@ -1332,7 +1333,7 @@
             swipeRightBtn.disabled = true;
             
             // Start timer
-            startResetTimer(lastSwipeDate, timerElement);
+            startResetTimer(lastSwipeDate, document.getElementById('resetTimer'));
         }
 
         // Update swipe count display
@@ -1364,6 +1365,9 @@
 
         // Generate a personalized greeting
         function generatePersonalizedGreeting() {
+            if (currentMatch.name === "Addy" && currentMatch.uniqueReplies) {
+                return currentMatch.uniqueReplies[0];
+            }
             const greetings = [
                 `Hey there! 😊 I'm ${currentMatch.name}. So glad we matched! What are you up to today?`,
                 `Hi! 👋 I'm ${currentMatch.name}. Excited to connect with you! How's your day going?`,
@@ -1382,6 +1386,12 @@
             const matchName = currentMatch.name;
             
             console.log('Processing message:', userMessage);
+            
+            // Handle Addy's unique replies
+            if (matchName === "Addy" && currentMatch.uniqueReplies && userMessageCount < 3) {
+                return currentMatch.uniqueReplies[userMessageCount];
+            }
+            
             // Define response patterns
             const responsePatterns = [
                 {
