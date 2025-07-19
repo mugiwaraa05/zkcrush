@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=0.9">
     <title>zkCrush</title>
     <style>
         /* Shared Styles */
@@ -315,17 +315,20 @@
             box-shadow: 0 5px 15px rgba(0,0,0,0.1);
             max-width: 350px;
             margin: 0 auto;
+            border: 2px solid #e91e63;
         }
         
         .no-more-title {
             font-size: 1.5rem;
             color: #e91e63;
             margin-bottom: 15px;
+            font-weight: bold;
         }
         
         .no-more-text {
             color: #666;
             line-height: 1.5;
+            font-style: italic;
         }
         
         /* Match Modal */
@@ -384,7 +387,6 @@
             font-size: 1rem;
         }
         
-        /* Reduced chat container height */
         .chat-container {
             margin-top: 15px;
             height: 160px;
@@ -594,32 +596,42 @@
         /* Responsive adjustments */
         @media (max-width: 500px) {
             .login-container {
-                padding: 30px 20px;
+                padding: 25px 15px;
                 width: 95%;
+                transform: scale(0.85); /* Zoom out for mobile */
             }
             
             .card {
-                height: 450px;
+                height: 420px;
+                max-width: 320px;
+                transform: scale(0.85); /* Zoom out for mobile */
             }
             
             .swipe-buttons {
-                gap: 20px;
+                gap: 15px;
             }
             
             .swipe-btn {
-                width: 60px;
-                height: 60px;
-                font-size: 1.8rem;
+                width: 55px;
+                height: 55px;
+                font-size: 1.6rem;
             }
             
             .match-content {
                 padding: 20px;
+                transform: scale(0.85); /* Zoom out for mobile */
             }
             
             .chat-container {
-                height: 140px;
+                height: 130px;
+            }
+            
+            .timer {
+                font-size: 1.1rem; /* Slightly larger for mobile readability */
+                padding: 8px;
             }
         }
+        
         .proof-of-gooner {
             text-align: center;
             padding: 30px;
@@ -643,6 +655,21 @@
             line-height: 1.5;
             font-style: italic;
         }
+        
+      .global-timer {
+    position: fixed;
+    top: 80px;
+    left: 20px;
+    font-size: 1.2rem;
+    color: #e91e63;
+    font-weight: bold;
+    padding: 8px 12px;
+    background-color: white;
+    border-radius: 20px;
+    box-shadow: 0 3px 10px rgba(0,0,0,0.1);
+    z-index: 5;
+    display: none; /* Hidden by default */
+}
         
         /* Sound controls */
         .sound-controls {
@@ -694,7 +721,7 @@
             <div class="logo-small">zkCrush</div>
             <div class="user-profile" id="userProfile"></div>
         </div>
-
+            <div class="timer" id="globalTimer"></div>
         <div class="main-content">
             <div class="swipe-count" id="swipeCount">Swipes left today: 11</div>
 
@@ -703,6 +730,7 @@
                 <div class="no-more-cards" id="noMoreCards" style="display: none;">
                     <h3 class="no-more-title">Proof of Gooner</h3>
                     <p class="no-more-text">You exhausted your swipes! Touch grass and come back tomorrow.</p>
+                    
                 </div>
             </div>
         </div>
@@ -750,8 +778,10 @@
     </audio>
 
     <script>
+        const DAILY_SWIPE_LIMIT = 11;
+
         // Sample baddies data - 23 profiles
-       const baddies = [
+        const baddies = [
             { id: 1, name: "Alina", age: 24, img: "./Avatars/alina.jpg", bio: "Let's create something magical together!", interests: ["painting", "hiking", "adventure"] },
             { id: 2, name: "Aurora", age: 22, img: "./Avatars/aurora.jpg", bio: "Artist and coffee enthusiast. Let's visit galleries and cafés together!", interests: ["art", "coffee", "galleries"] },
             { id: 3, name: "Bagholder", age: 25, img: "./Avatars/Bagholder.jpg", bio: "Fitness lover and dog person. Looking for a workout partner!", interests: ["fitness", "dogs", "workouts"] },
@@ -776,12 +806,11 @@
             { id: 22, name: "Cocowaves", age: 25, img: "./Avatars/coco.jpg", bio: "Winemaker and sommelier. Let's taste the good life!", interests: ["wine", "winemaking", "tasting"] },
             { id: 23, name: "Deli", age: 23, img: "./Avatars/deli.jpg", bio: "Florist and garden designer. Let's make love bloom!", interests: ["flowers", "gardening", "design"] }
         ];
-        
 
         // App state
         let userMessageCount = 0;
         let currentCardIndex = 0;
-        let swipesLeft = 11;
+        let swipesLeft = DAILY_SWIPE_LIMIT;
         let currentMatch = null;
         let currentUser = {
             handle: "",
@@ -792,6 +821,7 @@
         let isDragging = false;
         let startX, startY, moveX, moveY;
         let soundEnabled = true;
+        let timerInterval = null;
 
         // DOM elements
         const loginPage = document.getElementById('loginPage');
@@ -813,6 +843,7 @@
         const sendBtn = document.getElementById('sendBtn');
         const userProfile = document.getElementById('userProfile');
         const noMoreCards = document.getElementById('noMoreCards');
+        const resetTimer = document.getElementById('resetTimer');
         const typingIndicator = document.getElementById('typingIndicator');
         const soundBtn = document.getElementById('soundBtn');
         
@@ -821,12 +852,142 @@
         const swipeSound = document.getElementById('swipeSound');
         const buttonSound = document.getElementById('buttonSound');
 
+        // Storage functions
+        function getUserStorageKey(handle) {
+            return `zkCrushUser_${handle.toLowerCase()}`;
+        }
+
+        function getStoredUserData(handle) {
+            if (!handle) {
+                console.log('No handle provided for storage');
+                return null;
+            }
+            
+            const key = getUserStorageKey(handle);
+            const storedData = JSON.parse(localStorage.getItem(key)) || {};
+            console.log('Retrieved stored data:', storedData);
+            const now = new Date();
+            
+            // Check if it's a new day (24 hours since last swipe)
+            const lastSwipeDate = storedData.lastSwipeDate ? new Date(storedData.lastSwipeDate) : null;
+            const isNewDay = !lastSwipeDate || 
+                            (now - lastSwipeDate) >= 24 * 60 * 60 * 1000; // 24 hours in milliseconds
+            
+            // Reset swipes if it's a new day
+            if (isNewDay) {
+                console.log('New day detected, resetting swipes');
+                return {
+                    swipesLeft: DAILY_SWIPE_LIMIT,
+                    shuffledBaddies: [...baddies].sort(() => Math.random() - 0.5),
+                    lastSwipeDate: now.toISOString(),
+                    profilePic: storedData.profilePic || ""
+                };
+            }
+            
+            // Return stored data with defaults
+            return {
+                swipesLeft: storedData.swipesLeft !== undefined ? storedData.swipesLeft : DAILY_SWIPE_LIMIT,
+                shuffledBaddies: storedData.shuffledBaddies || [...baddies].sort(() => Math.random() - 0.5),
+                lastSwipeDate: storedData.lastSwipeDate || now.toISOString(),
+                profilePic: storedData.profilePic || ""
+            };
+        }
+
+        function updateStoredUserData(handle, data) {
+            if (!handle) {
+                console.log('No handle provided, cannot update storage');
+                return;
+            }
+            
+            const key = getUserStorageKey(handle);
+            const currentData = JSON.parse(localStorage.getItem(key)) || {};
+            const updatedData = {
+                ...currentData,
+                ...data,
+                lastSwipeDate: data.lastSwipeDate || new Date().toISOString()
+            };
+            localStorage.setItem(key, JSON.stringify(updatedData));
+            console.log('Updated stored data:', updatedData);
+        }
+
+        function saveUserLogin(handle, profilePic) {
+            localStorage.setItem('zkCrushLoggedInUser', JSON.stringify({
+                handle: handle,
+                profilePic: profilePic
+            }));
+            console.log('Saved login state:', { handle, profilePic });
+        }
+
+        function getLoggedInUser() {
+            const stored = localStorage.getItem('zkCrushLoggedInUser');
+            return stored ? JSON.parse(stored) : null;
+        }
+
+        // Timer function
+        function startResetTimer(lastSwipeDate, timerElement) {
+            if (timerInterval) clearInterval(timerInterval);
+            
+            const resetTime = new Date(lastSwipeDate);
+            resetTime.setHours(resetTime.getHours() + 24);
+            
+            function updateTimer() {
+                const now = new Date();
+                const timeLeft = resetTime - now;
+                
+                if (timeLeft <= 0) {
+                    console.log('Reset time reached, resetting swipes');
+                    clearInterval(timerInterval);
+                    timerElement.textContent = 'Swipes reset! Refresh to continue.';
+                    // Reset swipes and update storage
+                    swipesLeft = DAILY_SWIPE_LIMIT;
+                    shuffledBaddies = [...baddies].sort(() => Math.random() - 0.5);
+                    updateStoredUserData(currentUser.handle, {
+                        swipesLeft: swipesLeft,
+                        shuffledBaddies: shuffledBaddies,
+                        lastSwipeDate: now.toISOString()
+                    });
+                    updateSwipeCount();
+                    loadNextCard();
+                    return;
+                }
+                
+                const hours = Math.floor(timeLeft / (1000 * 60 * 60));
+                const minutes = Math.floor((timeLeft % (1000 * 60 * 60)) / (1000 * 60));
+                const seconds = Math.floor((timeLeft % (1000 * 60)) / 1000);
+                resetTimer.textContent = `Next reset in ${hours}h ${minutes}m ${seconds}s`;
+            }
+            
+            updateTimer();
+            timerInterval = setInterval(updateTimer, 1000);
+        }
+
         // Initialize the app
         function init() {
+            console.log('Initializing app...');
+            // Check if user is already logged in
+            const loggedInUser = getLoggedInUser();
+            if (loggedInUser && loggedInUser.handle) {
+                console.log('Found logged-in user:', loggedInUser.handle);
+                currentUser.handle = loggedInUser.handle;
+                currentUser.profilePic = loggedInUser.profilePic;
+                twitterHandleInput.value = loggedInUser.handle;
+                profilePic.src = loggedInUser.profilePic;
+                const userData = getStoredUserData(loggedInUser.handle);
+                swipesLeft = userData.swipesLeft;
+                shuffledBaddies = userData.shuffledBaddies;
+                console.log('Loaded swipesLeft:', swipesLeft, 'shuffledBaddies length:', shuffledBaddies.length);
+                ageCheck.checked = true;
+                toggleLoginButton();
+                handleLogin();
+            }
+
             // Login page event listeners
             twitterHandleInput.addEventListener('input', handleTwitterInput);
             ageCheck.addEventListener('change', toggleLoginButton);
-            loginBtn.addEventListener('click', handleLogin);
+            loginBtn.addEventListener('click', () => {
+                console.log('Login button clicked');
+                handleLogin();
+            });
             
             // Main app event listeners
             swipeLeftBtn.addEventListener('click', () => swipeCard('left'));
@@ -867,6 +1028,7 @@
 
         // Handle Twitter input changes
         function handleTwitterInput() {
+            console.log('Twitter input changed:', this.value);
             const handle = this.value.trim();
             currentUser.handle = handle;
             
@@ -876,13 +1038,17 @@
                 
                 // Set profile picture using unavatar.io with robohash fallback
                 profilePic.src = `https://unavatar.io/twitter/${cleanHandle}?fallback=https://robohash.org/${cleanHandle}`;
+                currentUser.profilePic = profilePic.src;
                 
                 // Handle potential image loading errors
                 profilePic.onerror = () => {
+                    console.log('Profile picture load failed, using fallback');
                     profilePic.src = `https://robohash.org/${cleanHandle}`;
+                    currentUser.profilePic = profilePic.src;
                 };
             } else {
                 profilePic.src = "";
+                currentUser.profilePic = "";
             }
             
             toggleLoginButton();
@@ -890,38 +1056,75 @@
 
         // Toggle login button state
         function toggleLoginButton() {
-            loginBtn.disabled = !ageCheck.checked || !twitterHandleInput.value.trim();
+            const isEnabled = ageCheck.checked && twitterHandleInput.value.trim();
+            loginBtn.disabled = !isEnabled;
+            console.log('Login button enabled:', isEnabled);
         }
 
         // Handle login
         function handleLogin() {
-            playSound(buttonSound);
-            currentUser.handle = twitterHandleInput.value.trim();
+            console.log('Handling login for handle:', currentUser.handle);
+            const handle = twitterHandleInput.value.trim();
+            if (!handle || !ageCheck.checked) {
+                console.log('Login aborted: handle or age check missing');
+                return;
+            }
             
-            // Set user profile picture in main app
-            userProfile.style.backgroundImage = `url(${profilePic.src})`;
+            currentUser.handle = handle;
             
-            // Switch to main app with animation
-            loginPage.style.opacity = '0';
-            setTimeout(() => {
-                loginPage.style.display = 'none';
-                appPage.style.display = 'block';
+            try {
+                // Save login state
+                saveUserLogin(handle, currentUser.profilePic);
                 
-                // Initialize main app
-                updateSwipeCount();
-                loadNextCard();
-            }, 500);
+                // Load user data from storage
+                const userData = getStoredUserData(handle);
+                swipesLeft = userData.swipesLeft;
+                shuffledBaddies = userData.shuffledBaddies;
+                console.log('Login loaded swipesLeft:', swipesLeft, 'shuffledBaddies length:', shuffledBaddies.length);
+                
+                // Set user profile picture in main app
+                userProfile.style.backgroundImage = `url(${currentUser.profilePic})`;
+                
+                // Switch to main app with animation
+                loginPage.style.opacity = '0';
+                setTimeout(() => {
+                    console.log('Switching to app page');
+                    loginPage.style.display = 'none';
+                    appPage.style.display = 'block';
+                    
+                    // Initialize main app
+                    updateSwipeCount();
+                    if (swipesLeft <= 0 || shuffledBaddies.length === 0) {
+                        console.log('No swipes left or no profiles, showing Proof of Gooner');
+                        showNoMoreCards(userData.lastSwipeDate);
+                    } else {
+                        console.log('Loading next card');
+                        loadNextCard();
+                    }
+                    playSound(buttonSound); // Play sound after successful transition
+                }, 500);
+            } catch (error) {
+                console.error('Error during login:', error);
+            }
         }
 
         // Load the next card
         function loadNextCard() {
             if (shuffledBaddies.length === 0) {
-                // Shuffle the baddies array for random order if empty
-                shuffledBaddies = [...baddies].sort(() => Math.random() - 0.5);
+                // Get from user's storage if empty
+                const userData = getStoredUserData(currentUser.handle);
+                shuffledBaddies = userData.shuffledBaddies;
+                
+                if (shuffledBaddies.length === 0) {
+                    // If still empty, create new shuffled array
+                    shuffledBaddies = [...baddies].sort(() => Math.random() - 0.5);
+                    updateStoredUserData(currentUser.handle, { shuffledBaddies: shuffledBaddies });
+                }
             }
             
             if (shuffledBaddies.length === 0 || swipesLeft <= 0) {
-                showNoMoreCards();
+                const userData = getStoredUserData(currentUser.handle);
+                showNoMoreCards(userData.lastSwipeDate);
                 return;
             }
             
@@ -936,6 +1139,9 @@
             
             // Add drag events for swipe
             addDragEvents(currentCard);
+            
+            // Update storage
+            updateStoredUserData(currentUser.handle, { shuffledBaddies: shuffledBaddies });
         }
 
         // Create a card element
@@ -1065,7 +1271,16 @@
             if (swipesLeft <= 0 || !currentCard) return;
             
             swipesLeft--;
+            console.log('Swiped', direction, 'Swipes left:', swipesLeft);
             updateSwipeCount();
+            
+            // Update storage with new swipe date
+            const now = new Date();
+            updateStoredUserData(currentUser.handle, {
+                swipesLeft: swipesLeft,
+                shuffledBaddies: shuffledBaddies,
+                lastSwipeDate: now.toISOString()
+            });
             
             // Play swipe sound
             playSound(swipeSound);
@@ -1087,31 +1302,38 @@
             // Remove card after animation
             setTimeout(() => {
                 cardsContainer.removeChild(currentCard);
-                loadNextCard();
+                if (swipesLeft <= 0 || shuffledBaddies.length === 0) {
+                    showNoMoreCards(now.toISOString());
+                } else {
+                    loadNextCard();
+                }
             }, 500);
         }
 
-        // Show no more cards message
-       function showNoMoreCards() {
-    cardsContainer.innerHTML = '';
+        // Show no more cards message with timer
+        function showNoMoreCards(lastSwipeDate) {
+            cardsContainer.innerHTML = '';
+            noMoreCards.style.display = 'block';
     
-    // Create the Proof of Gooner message element
-    const proofElement = document.createElement('div');
-    proofElement.className = 'no-more-cards';
-    proofElement.innerHTML = `
-        <h3 class="no-more-title">Proof of Gooner</h3>
-        <p class="no-more-text">You exhausted your swipes! Touch grass and come back tomorrow.</p>
-    `;
-    
-    // Add custom styling
-    proofElement.style.border = '2px solid #e91e63';
-    proofElement.style.boxShadow = '0 5px 15px rgba(233, 30, 99, 0.3)';
-    proofElement.style.fontStyle = 'italic';
-    
-    cardsContainer.appendChild(proofElement);
-    swipeLeftBtn.disabled = true;
-    swipeRightBtn.disabled = true;
-}
+    // Get reference to the timer element inside noMoreCards
+    const timerElement = noMoreCards.querySelector('.timer');
+            
+            // Create the Proof of Gooner message element
+            const proofElement = document.createElement('div');
+            proofElement.className = 'no-more-cards proof-of-gooner';
+            proofElement.innerHTML = `
+                <h3 class="no-more-title proof-title">Proof of Gooner</h3>
+                <p class="no-more-text proof-text">You exhausted your swipes! Touch grass and come back tomorrow.</p>
+                <div class="timer" id="resetTimer"></div>
+            `;
+            
+            cardsContainer.appendChild(proofElement);
+            swipeLeftBtn.disabled = true;
+            swipeRightBtn.disabled = true;
+            
+            // Start timer
+            startResetTimer(lastSwipeDate, timerElement);
+        }
 
         // Update swipe count display
         function updateSwipeCount() {
@@ -1159,8 +1381,25 @@
             const lowerMsg = userMessage.toLowerCase();
             const matchName = currentMatch.name;
             
+            console.log('Processing message:', userMessage);
             // Define response patterns
             const responsePatterns = [
+                {
+                    patterns: [
+                        /(?:^|\s)fuck(?:$|\s|[.!?,;])/i,
+                        /(?:^|\s)shit(?:$|\s|[.!?,;])/i,
+                        /(?:^|\s)wtf(?:$|\s|[.!?,;])/i,
+                        /(?:^|\s)retard(?:$|\s|[.!?,;])/i,
+                        /(?:^|\s)asshole(?:$|\s|[.!?,;])/i,
+                        /(?:^|\s)idiot(?:$|\s|[.!?,;])/i,
+                        /(?:^|\s)ode(?:$|\s|[.!?,;])/i
+                    ],
+                    responses: [
+                        "Hey watch your language, dont hurt my feelings🥺",
+                        "Thats not very nice, i dont like that word",
+                        "Dont talk like that baby, Language!!"
+                    ]
+                },
                 {
                     patterns: [/hello|hi|hey|howdy|yo|sup|what's up|good morning|good afternoon|good evening/i],
                     responses: [
@@ -1252,14 +1491,6 @@
                     ]
                 },
                 {
-                    patterns: [/(?:^|\s)(fuck|shit|wtf|retard|asshole|idiot|ode)(?:$|\s|[.!?,;])/i],
-                    responses: [
-                        "Hey watch your language, dont hurt my feelings🥺",
-                        "Thats not very nice, i dont like that word",
-                        "Dont talk like that baby, Language!!"
-                    ]
-                },
-                {
                     patterns: [/joke|funny|laugh|humor|comedy|hilarious|pun|rofl|lol/i],
                     responses: [
                         "Why don't scientists trust atoms? Because they make up everything! 😄",
@@ -1292,7 +1523,7 @@
                 }
             }
             
-            // If no pattern matches, return a default response
+            // Return default response
             return defaultResponses[Math.floor(Math.random() * defaultResponses.length)];
         }
 
@@ -1354,7 +1585,6 @@
                 }
             }, 1000 + Math.random() * 1500);
         }
-
 
         // Initialize the app
         init();
