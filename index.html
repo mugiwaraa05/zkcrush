@@ -1,0 +1,1363 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>zkCrush</title>
+    <style>
+        /* Shared Styles */
+        * {
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Arial', sans-serif;
+            margin: 0;
+            padding: 0;
+            color: #e91e63;
+            overflow-x: hidden;
+            background-color: #fff5f7;
+        }
+        
+        /* Login Page Styles */
+        .login-page {
+            background: linear-gradient(135deg, #ffffff 0%, #ffebee 50%, #ffcdd2 100%);
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            transition: all 0.5s ease;
+        }
+        
+        .login-container {
+            background-color: white;
+            border-radius: 20px;
+            box-shadow: 0 15px 35px rgba(233, 30, 99, 0.2);
+            padding: 40px;
+            width: 90%;
+            max-width: 400px;
+            text-align: center;
+            transform: scale(0.95);
+            animation: fadeIn 0.5s forwards;
+        }
+        
+        @keyframes fadeIn {
+            to { transform: scale(1); opacity: 1; }
+        }
+        
+        .logo {
+            font-size: 2.8rem;
+            font-weight: bold;
+            margin-bottom: 30px;
+            color: #e91e63;
+            background: linear-gradient(45deg, #e91e63, #ff4081);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        
+        .twitter-input {
+            width: 100%;
+            padding: 15px;
+            margin: 15px 0;
+            border: 2px solid #f8bbd0;
+            border-radius: 12px;
+            font-size: 1rem;
+            transition: all 0.3s;
+        }
+        
+        .twitter-input:focus {
+            border-color: #e91e63;
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(233, 30, 99, 0.2);
+        }
+        
+        .profile-pic-container {
+            position: relative;
+            width: 120px;
+            height: 120px;
+            margin: 20px auto;
+            border-radius: 50%;
+            overflow: hidden;
+            border: 4px solid white;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+        
+        .profile-pic {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+        }
+        
+        .age-check {
+            margin: 25px 0;
+            text-align: left;
+            display: flex;
+            align-items: center;
+        }
+        
+        .age-check input {
+            margin-right: 10px;
+            width: 20px;
+            height: 20px;
+            accent-color: #e91e63;
+        }
+        
+        .login-btn {
+            background: linear-gradient(45deg, #e91e63, #ff4081);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 12px;
+            font-size: 1.1rem;
+            cursor: pointer;
+            transition: all 0.3s;
+            width: 100%;
+            box-shadow: 0 5px 15px rgba(233, 30, 99, 0.4);
+        }
+        
+        .login-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 20px rgba(233, 30, 99, 0.6);
+        }
+        
+        .login-btn:active {
+            transform: translateY(1px);
+        }
+        
+        .login-btn:disabled {
+            background: #f8bbd0;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+        
+        /* Main App Styles */
+        .app-page {
+            display: none;
+            background: linear-gradient(135deg, #ffffff 0%, #ffebee 50%, #ffcdd2 100%);
+            min-height: 100vh;
+            position: relative;
+        }
+        
+        .header {
+            background-color: white;
+            padding: 15px 20px;
+            box-shadow: 0 2px 15px rgba(233, 30, 99, 0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: fixed;
+            width: 100%;
+            top: 0;
+            z-index: 10;
+        }
+        
+        .logo-small {
+            font-size: 1.8rem;
+            font-weight: bold;
+            color: #e91e63;
+            background: linear-gradient(45deg, #e91e63, #ff4081);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        
+        .user-profile {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background-color: #f8bbd0;
+            cursor: pointer;
+            background-size: cover;
+            background-position: center;
+            border: 2px solid white;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.1);
+        }
+        
+        .main-content {
+            padding-top: 80px;
+            padding-bottom: 120px;
+        }
+        
+        .swipe-count {
+            text-align: center;
+            margin: 20px 0;
+            font-weight: bold;
+            font-size: 1.1rem;
+            color: #e91e63;
+            padding: 10px;
+            background-color: white;
+            border-radius: 20px;
+            width: 200px;
+            margin: 20px auto;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.1);
+        }
+        
+        .cards-container {
+            position: relative;
+            max-width: 400px;
+            margin: 0 auto;
+            height: 500px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .card {
+            position: absolute;
+            width: 90%;
+            max-width: 350px;
+            height: 480px;
+            background-color: white;
+            border-radius: 20px;
+            box-shadow: 0 10px 25px rgba(233, 30, 99, 0.2);
+            overflow: hidden;
+            transition: transform 0.5s, opacity 0.5s;
+            cursor: grab;
+            user-select: none;
+            transform-origin: center center;
+        }
+        
+        .card:active {
+            cursor: grabbing;
+        }
+        
+        .card.moving {
+            transition: none;
+        }
+        
+        .card-img-container {
+            width: 100%;
+            height: 75%;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .card-img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 0.3s;
+        }
+        
+        .card-info {
+            padding: 20px;
+            position: relative;
+        }
+        
+        .card-name {
+            font-size: 1.5rem;
+            font-weight: bold;
+            margin: 0;
+            color: #e91e63;
+        }
+        
+        .card-age {
+            color: #888;
+            margin: 5px 0;
+            font-size: 1.1rem;
+        }
+        
+        .card-bio {
+            margin: 10px 0 0;
+            color: #555;
+            line-height: 1.4;
+        }
+        
+        .swipe-buttons {
+            display: flex;
+            justify-content: center;
+            margin: 20px auto;
+            gap: 30px;
+            position: fixed;
+            bottom: 30px;
+            left: 0;
+            right: 0;
+            z-index: 5;
+        }
+        
+        .swipe-btn {
+            width: 70px;
+            height: 70px;
+            border-radius: 50%;
+            border: none;
+            background-color: white;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+            font-size: 2rem;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .swipe-btn:hover {
+            transform: scale(1.1);
+        }
+        
+        .swipe-btn:active {
+            transform: scale(0.95);
+        }
+        
+        .swipe-left {
+            color: #f44336;
+        }
+        
+        .swipe-right {
+            color: #4CAF50;
+        }
+        
+        .no-more-cards {
+            text-align: center;
+            padding: 30px;
+            background-color: white;
+            border-radius: 20px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            max-width: 350px;
+            margin: 0 auto;
+        }
+        
+        .no-more-title {
+            font-size: 1.5rem;
+            color: #e91e63;
+            margin-bottom: 15px;
+        }
+        
+        .no-more-text {
+            color: #666;
+            line-height: 1.5;
+        }
+        
+        /* Match Modal */
+        .match-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.8);
+            z-index: 100;
+            justify-content: center;
+            align-items: center;
+            animation: fadeIn 0.3s forwards;
+        }
+        
+        .match-content {
+            background-color: white;
+            border-radius: 25px;
+            padding: 30px;
+            text-align: center;
+            width: 90%;
+            max-width: 400px;
+            position: relative;
+            transform: scale(0.9);
+            opacity: 0;
+            animation: popIn 0.4s 0.2s forwards;
+            box-shadow: 0 15px 30px rgba(233, 30, 99, 0.3);
+        }
+        
+        @keyframes popIn {
+            to { transform: scale(1); opacity: 1; }
+        }
+        
+        .match-img {
+            width: 150px;
+            height: 150px;
+            border-radius: 50%;
+            object-fit: cover;
+            margin: 0 auto 15px;
+            border: 4px solid #e91e63;
+            box-shadow: 0 8px 20px rgba(233, 30, 99, 0.3);
+        }
+        
+        .match-title {
+            font-size: 1.8rem;
+            color: #e91e63;
+            margin-bottom: 15px;
+            font-weight: bold;
+        }
+        
+        .match-subtitle {
+            color: #666;
+            margin-bottom: 20px;
+            font-size: 1rem;
+        }
+        
+        /* Reduced chat container height */
+        .chat-container {
+            margin-top: 15px;
+            height: 160px;
+            overflow-y: auto;
+            border: 2px solid #f8bbd0;
+            border-radius: 15px;
+            padding: 12px;
+            text-align: left;
+            background-color: #fff9fa;
+            box-shadow: inset 0 0 8px rgba(0,0,0,0.05);
+        }
+        
+        .message {
+            margin: 8px 0;
+            padding: 10px 14px;
+            border-radius: 16px;
+            max-width: 85%;
+            word-wrap: break-word;
+            animation: messageIn 0.3s forwards;
+            font-size: 0.9rem;
+            line-height: 1.4;
+            position: relative;
+        }
+        
+        @keyframes messageIn {
+            from { transform: translateY(10px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+        
+        .their-message {
+            background-color: #f8bbd0;
+            margin-right: auto;
+            border-bottom-left-radius: 5px;
+        }
+        
+        .their-message::after {
+            content: "";
+            position: absolute;
+            left: -8px;
+            bottom: 0;
+            border-width: 0 8px 8px 0;
+            border-style: solid;
+            border-color: transparent #f8bbd0 transparent transparent;
+        }
+        
+        .your-message {
+            background-color: #e91e63;
+            color: white;
+            margin-left: auto;
+            border-bottom-right-radius: 5px;
+        }
+        
+        .your-message::after {
+            content: "";
+            position: absolute;
+            right: -8px;
+            bottom: 0;
+            border-width: 0 0 8px 8px;
+            border-style: solid;
+            border-color: transparent transparent transparent #e91e63;
+        }
+        
+        .chat-input-container {
+            display: flex;
+            margin-top: 15px;
+        }
+        
+        .reply-input {
+            flex: 1;
+            padding: 12px 15px;
+            border: 2px solid #f8bbd0;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            transition: all 0.3s;
+        }
+        
+        .reply-input:focus {
+            border-color: #e91e63;
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(233, 30, 99, 0.2);
+        }
+        
+        .send-btn {
+            background: linear-gradient(45deg, #e91e63, #ff4081);
+            color: white;
+            border: none;
+            padding: 0 20px;
+            border-radius: 20px;
+            margin-left: 10px;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 3px 10px rgba(233, 30, 99, 0.3);
+            font-size: 0.9rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .send-btn:hover {
+            transform: scale(1.05);
+        }
+        
+        .send-btn:active {
+            transform: scale(0.95);
+        }
+        
+        .close-btn {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            background: none;
+            border: none;
+            font-size: 1.8rem;
+            color: #e91e63;
+            cursor: pointer;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            border-radius: 50%;
+            transition: all 0.3s;
+        }
+        
+        .close-btn:hover {
+            background-color: #f8bbd0;
+        }
+        
+        /* Swipe animations */
+        .swipe-right {
+            transform: translateX(200%) rotate(30deg) !important;
+            opacity: 0;
+        }
+        
+        .swipe-left {
+            transform: translateX(-200%) rotate(-30deg) !important;
+            opacity: 0;
+        }
+        
+        /* Swipe indicators */
+        .swipe-indicator {
+            position: absolute;
+            top: 20px;
+            font-size: 1.5rem;
+            font-weight: bold;
+            padding: 5px 15px;
+            border-radius: 20px;
+            opacity: 0;
+            transition: opacity 0.3s;
+            z-index: 1;
+        }
+        
+        .like-indicator {
+            right: 20px;
+            color: #4CAF50;
+            border: 2px solid #4CAF50;
+            background-color: rgba(76, 175, 80, 0.1);
+        }
+        
+        .nope-indicator {
+            left: 20px;
+            color: #f44336;
+            border: 2px solid #f44336;
+            background-color: rgba(244, 67, 54, 0.1);
+        }
+        
+        .show-indicator {
+            opacity: 1;
+        }
+        
+        /* Typing indicator */
+        .typing-indicator {
+            display: none;
+            background-color: #f8bbd0;
+            padding: 10px 15px;
+            border-radius: 16px;
+            width: fit-content;
+            margin: 8px 0;
+            animation: pulse 1.5s infinite;
+        }
+        
+        .typing-dot {
+            display: inline-block;
+            width: 7px;
+            height: 7px;
+            border-radius: 50%;
+            background-color: #e91e63;
+            margin: 0 3px;
+            animation: typing 1.4s infinite ease-in-out;
+        }
+        
+        .typing-dot:nth-child(1) { animation-delay: 0s; }
+        .typing-dot:nth-child(2) { animation-delay: 0.2s; }
+        .typing-dot:nth-child(3) { animation-delay: 0.4s; }
+        
+        @keyframes typing {
+            0%, 60%, 100% { transform: translateY(0); }
+            30% { transform: translateY(-4px); }
+        }
+        
+        @keyframes pulse {
+            0% { opacity: 0.8; }
+            50% { opacity: 1; }
+            100% { opacity: 0.8; }
+        }
+        
+        /* Responsive adjustments */
+        @media (max-width: 500px) {
+            .login-container {
+                padding: 30px 20px;
+                width: 95%;
+            }
+            
+            .card {
+                height: 450px;
+            }
+            
+            .swipe-buttons {
+                gap: 20px;
+            }
+            
+            .swipe-btn {
+                width: 60px;
+                height: 60px;
+                font-size: 1.8rem;
+            }
+            
+            .match-content {
+                padding: 20px;
+            }
+            
+            .chat-container {
+                height: 140px;
+            }
+        }
+        .proof-of-gooner {
+            text-align: center;
+            padding: 30px;
+            background-color: white;
+            border-radius: 20px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            max-width: 350px;
+            margin: 0 auto;
+            border: 2px solid #e91e63;
+        }
+        
+        .proof-title {
+            font-size: 1.5rem;
+            color: #e91e63;
+            margin-bottom: 15px;
+            font-weight: bold;
+        }
+        
+        .proof-text {
+            color: #666;
+            line-height: 1.5;
+            font-style: italic;
+        }
+        
+        /* Sound controls */
+        .sound-controls {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            z-index: 20;
+        }
+        
+        .sound-btn {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: linear-gradient(45deg, #e91e63, #ff4081);
+            color: white;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.2);
+            border: none;
+        }
+        
+        .sound-btn.muted {
+            background: #ccc;
+        }
+    </style>
+</head>
+<body>
+    <!-- Login Page -->
+    <div class="login-page" id="loginPage">
+        <div class="login-container">
+            <div class="logo">zkCrush</div>
+            <input type="text" class="twitter-input" id="twitterHandle" placeholder="Enter your Twitter handle (e.g., @username)" />
+            <div class="profile-pic-container">
+                <img id="profilePic" class="profile-pic" src="" alt="Profile Picture" />
+            </div>
+            <div class="age-check">
+                <input type="checkbox" id="ageCheck" />
+                <label for="ageCheck">I confirm that I am over 18 years old</label>
+            </div>
+            <button class="login-btn" id="loginBtn" disabled>Continue to zkCrush</button>
+        </div>
+    </div>
+
+    <!-- Main App (hidden initially) -->
+    <div class="app-page" id="appPage">
+        <div class="header">
+            <div class="logo-small">zkCrush</div>
+            <div class="user-profile" id="userProfile"></div>
+        </div>
+
+        <div class="main-content">
+            <div class="swipe-count" id="swipeCount">Swipes left today: 11</div>
+
+            <div class="cards-container" id="cardsContainer">
+                <!-- Cards will be dynamically added here -->
+                <div class="no-more-cards" id="noMoreCards" style="display: none;">
+                    <h3 class="no-more-title">Proof of Gooner</h3>
+                    <p class="no-more-text">You exhausted your swipes! Touch grass and come back tomorrow.</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="swipe-buttons">
+            <button class="swipe-btn swipe-left" id="swipeLeft">✖</button>
+            <button class="swipe-btn swipe-right" id="swipeRight">❤</button>
+        </div>
+        
+        <!-- Sound controls -->
+        <div class="sound-controls">
+            <button class="sound-btn" id="soundBtn">🔊</button>
+        </div>
+
+        <div class="match-modal" id="matchModal">
+            <div class="match-content">
+                <button class="close-btn" id="closeModal">×</button>
+                <img class="match-img" id="matchImg" src="" alt="Match">
+                <h2 class="match-title">It's a match!</h2>
+                <p class="match-subtitle">You and <span id="matchName"></span> liked each other</p>
+                <div class="chat-container" id="chatContainer">
+                    <div class="typing-indicator" id="typingIndicator">
+                        <span class="typing-dot"></span>
+                        <span class="typing-dot"></span>
+                        <span class="typing-dot"></span>
+                    </div>
+                </div>
+                <div class="chat-input-container">
+                    <input type="text" class="reply-input" id="replyInput" placeholder="Type your reply...">
+                    <button class="send-btn" id="sendBtn">Send</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Audio elements -->
+    <audio id="matchSound" preload="auto">
+        <source src="./sounds/match.wav" type="audio/mpeg">
+    </audio>
+    <audio id="swipeSound" preload="auto">
+        <source src="./sounds/swipe.wav" type="audio/mpeg">
+    </audio>
+    <audio id="buttonSound" preload="auto">
+        <source src="./sounds/click.mp3" type="audio/mpeg">
+    </audio>
+
+    <script>
+        // Sample baddies data - 23 profiles
+       const baddies = [
+            { id: 1, name: "Alina", age: 24, img: "./Avatars/alina.jpg", bio: "Let's create something magical together!", interests: ["painting", "hiking", "adventure"] },
+            { id: 2, name: "Aurora", age: 22, img: "./Avatars/aurora.jpg", bio: "Artist and coffee enthusiast. Let's visit galleries and cafés together!", interests: ["art", "coffee", "galleries"] },
+            { id: 3, name: "Bagholder", age: 25, img: "./Avatars/Bagholder.jpg", bio: "Fitness lover and dog person. Looking for a workout partner!", interests: ["fitness", "dogs", "workouts"] },
+            { id: 4, name: "Scorpy", age: 23, img: "./Avatars/scorpy.jpg", bio: "Bookworm and movie buff. Let's discuss our favorite stories!", interests: ["books", "movies", "storytelling"] },
+            { id: 5, name: "Miley", age: 26, img: "./Avatars/miley.jpg", bio: "Adventure seeker and photographer. Ready for spontaneous trips?", interests: ["adventure", "photography", "travel"] },
+            { id: 6, name: "Pix", age: 21, img: "./Avatars/Pix.jpg", bio: "Music producer and dancer. Let's make some beats together!", interests: ["music", "dancing", "production"] },
+            { id: 7, name: "Katy", age: 24, img: "./Avatars/katy.jpg", bio: "Chef and wine connoisseur. Dinner date at my place?", interests: ["cooking", "wine", "dining"] },
+            { id: 8, name: "Lola", age: 23, img: "./Avatars/Lola.jpg", bio: "Yoga instructor and vegan foodie. Namaste and let's eat!", interests: ["yoga", "vegan food", "meditation"] },
+            { id: 9, name: "Mvkise", age: 25, img: "./Avatars/mvkise.jpg", bio: "Digital nomad and travel blogger. Next stop: your heart?", interests: ["travel", "blogging", "adventure"] },
+            { id: 10, name: "Uma", age: 22, img: "./Avatars/uma.jpg", bio: "Medical student and animal lover. Swipe right for puppy pics!", interests: ["medicine", "animals", "pets"] },
+            { id: 11, name: "Hile", age: 24, img: "./Avatars/hile.jpg", bio: "Fashion designer and thrift shop queen. Let's go vintage hunting!", interests: ["fashion", "vintage", "shopping"] },
+            { id: 12, name: "Omoge", age: 23, img: "./Avatars/omoge.jpg", bio: "Marine biologist and scuba diver. Let's explore the deep blue!", interests: ["marine life", "scuba diving", "ocean"] },
+            { id: 13, name: "Lolaa", age: 25, img: "./Avatars/lolaa.jpg", bio: "Stand-up comedian and karaoke star. Ready to laugh and sing?", interests: ["comedy", "karaoke", "singing"] },
+            { id: 14, name: "Lolajo", age: 24, img: "./Avatars/lolajo.jpg", bio: "Architect and miniature builder. Let's construct something special!", interests: ["architecture", "miniatures", "design"] },
+            { id: 15, name: "Hailey", age: 26, img: "./Avatars/hailey.jpg", bio: "Astronomer and stargazer. Let's count the stars together!", interests: ["astronomy", "stars", "space"] },
+            { id: 16, name: "Mabel", age: 23, img: "./Avatars/mabel.jpg", bio: "Poet and coffee shop regular. Let's write our story!", interests: ["poetry", "coffee", "writing"] },
+            { id: 17, name: "Mary", age: 25, img: "./Avatars/mary.jpg", bio: "Rock climber and adrenaline junkie. Ready for adventure?", interests: ["rock climbing", "adrenaline", "extreme sports"] },
+            { id: 18, name: "Joy", age: 24, img: "./Avatars/Joy.jpg", bio: "Veterinarian and wildlife rescuer. Let's care for creatures great and small!", interests: ["animals", "wildlife", "veterinary"] },
+            { id: 19, name: "Imani", age: 23, img: "./Avatars/imani.jpg", bio: "Scientist and inventor. Let's experiment with love!", interests: ["science", "inventions", "research"] },
+            { id: 20, name: "Fidesire", age: 26, img: "./Avatars/fidesire.jpg", bio: "Historian and antique collector. Let's uncover the past together!", interests: ["history", "antiques", "artifacts"] },
+            { id: 21, name: "Angel", age: 24, img: "./Avatars/angel.jpg", bio: "Pilot and travel enthusiast. Ready for takeoff?", interests: ["aviation", "travel", "flying"] },
+            { id: 22, name: "Cocowaves", age: 25, img: "./Avatars/coco.jpg", bio: "Winemaker and sommelier. Let's taste the good life!", interests: ["wine", "winemaking", "tasting"] },
+            { id: 23, name: "Deli", age: 23, img: "./Avatars/deli.jpg", bio: "Florist and garden designer. Let's make love bloom!", interests: ["flowers", "gardening", "design"] }
+        ];
+        
+
+        // App state
+        let userMessageCount = 0;
+        let currentCardIndex = 0;
+        let swipesLeft = 11;
+        let currentMatch = null;
+        let currentUser = {
+            handle: "",
+            profilePic: ""
+        };
+        let currentCard = null;
+        let shuffledBaddies = [];
+        let isDragging = false;
+        let startX, startY, moveX, moveY;
+        let soundEnabled = true;
+
+        // DOM elements
+        const loginPage = document.getElementById('loginPage');
+        const appPage = document.getElementById('appPage');
+        const twitterHandleInput = document.getElementById('twitterHandle');
+        const profilePic = document.getElementById('profilePic');
+        const ageCheck = document.getElementById('ageCheck');
+        const loginBtn = document.getElementById('loginBtn');
+        const cardsContainer = document.getElementById('cardsContainer');
+        const swipeLeftBtn = document.getElementById('swipeLeft');
+        const swipeRightBtn = document.getElementById('swipeRight');
+        const swipeCountEl = document.getElementById('swipeCount');
+        const matchModal = document.getElementById('matchModal');
+        const closeModalBtn = document.getElementById('closeModal');
+        const matchImg = document.getElementById('matchImg');
+        const matchName = document.getElementById('matchName');
+        const chatContainer = document.getElementById('chatContainer');
+        const replyInput = document.getElementById('replyInput');
+        const sendBtn = document.getElementById('sendBtn');
+        const userProfile = document.getElementById('userProfile');
+        const noMoreCards = document.getElementById('noMoreCards');
+        const typingIndicator = document.getElementById('typingIndicator');
+        const soundBtn = document.getElementById('soundBtn');
+        
+        // Audio elements
+        const matchSound = document.getElementById('matchSound');
+        const swipeSound = document.getElementById('swipeSound');
+        const buttonSound = document.getElementById('buttonSound');
+
+        // Initialize the app
+        function init() {
+            // Login page event listeners
+            twitterHandleInput.addEventListener('input', handleTwitterInput);
+            ageCheck.addEventListener('change', toggleLoginButton);
+            loginBtn.addEventListener('click', handleLogin);
+            
+            // Main app event listeners
+            swipeLeftBtn.addEventListener('click', () => swipeCard('left'));
+            swipeRightBtn.addEventListener('click', () => swipeCard('right'));
+            closeModalBtn.addEventListener('click', () => {
+                matchModal.style.display = 'none';
+                playSound(buttonSound);
+            });
+            sendBtn.addEventListener('click', sendMessage);
+            replyInput.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') sendMessage();
+            });
+            
+            // Sound control
+            soundBtn.addEventListener('click', toggleSound);
+            
+            // Preload sounds
+            matchSound.load();
+            swipeSound.load();
+            buttonSound.load();
+        }
+
+        // Play sound if enabled
+        function playSound(sound) {
+            if (soundEnabled) {
+                sound.currentTime = 0; // Rewind to start
+                sound.play().catch(e => console.log("Sound play failed:", e));
+            }
+        }
+
+        // Toggle sound on/off
+        function toggleSound() {
+            soundEnabled = !soundEnabled;
+            soundBtn.classList.toggle('muted', !soundEnabled);
+            soundBtn.textContent = soundEnabled ? "🔊" : "🔇";
+            playSound(buttonSound);
+        }
+
+        // Handle Twitter input changes
+        function handleTwitterInput() {
+            const handle = this.value.trim();
+            currentUser.handle = handle;
+            
+            if (handle) {
+                // Remove '@' if present
+                const cleanHandle = handle.replace('@', '');
+                
+                // Set profile picture using unavatar.io with robohash fallback
+                profilePic.src = `https://unavatar.io/twitter/${cleanHandle}?fallback=https://robohash.org/${cleanHandle}`;
+                
+                // Handle potential image loading errors
+                profilePic.onerror = () => {
+                    profilePic.src = `https://robohash.org/${cleanHandle}`;
+                };
+            } else {
+                profilePic.src = "";
+            }
+            
+            toggleLoginButton();
+        }
+
+        // Toggle login button state
+        function toggleLoginButton() {
+            loginBtn.disabled = !ageCheck.checked || !twitterHandleInput.value.trim();
+        }
+
+        // Handle login
+        function handleLogin() {
+            playSound(buttonSound);
+            currentUser.handle = twitterHandleInput.value.trim();
+            
+            // Set user profile picture in main app
+            userProfile.style.backgroundImage = `url(${profilePic.src})`;
+            
+            // Switch to main app with animation
+            loginPage.style.opacity = '0';
+            setTimeout(() => {
+                loginPage.style.display = 'none';
+                appPage.style.display = 'block';
+                
+                // Initialize main app
+                updateSwipeCount();
+                loadNextCard();
+            }, 500);
+        }
+
+        // Load the next card
+        function loadNextCard() {
+            if (shuffledBaddies.length === 0) {
+                // Shuffle the baddies array for random order if empty
+                shuffledBaddies = [...baddies].sort(() => Math.random() - 0.5);
+            }
+            
+            if (shuffledBaddies.length === 0 || swipesLeft <= 0) {
+                showNoMoreCards();
+                return;
+            }
+            
+            // Clear previous card
+            cardsContainer.innerHTML = '';
+            noMoreCards.style.display = 'none';
+            
+            // Get next baddie
+            const baddie = shuffledBaddies.pop();
+            currentCard = createCard(baddie);
+            cardsContainer.appendChild(currentCard);
+            
+            // Add drag events for swipe
+            addDragEvents(currentCard);
+        }
+
+        // Create a card element
+        function createCard(baddie) {
+            const card = document.createElement('div');
+            card.className = 'card';
+            card.dataset.id = baddie.id;
+            
+            // Add swipe indicators
+            const likeIndicator = document.createElement('div');
+            likeIndicator.className = 'swipe-indicator like-indicator';
+            likeIndicator.textContent = 'LIKE';
+            
+            const nopeIndicator = document.createElement('div');
+            nopeIndicator.className = 'swipe-indicator nope-indicator';
+            nopeIndicator.textContent = 'NOPE';
+            
+            card.innerHTML = `
+                <div class="card-img-container">
+                    <img class="card-img" src="${baddie.img}" alt="${baddie.name}" onerror="this.src='https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=200'">
+                </div>
+                <div class="card-info">
+                    <h3 class="card-name">${baddie.name}, <span class="card-age">${baddie.age}</span></h3>
+                    <p class="card-bio">${baddie.bio}</p>
+                </div>
+            `;
+            
+            card.appendChild(likeIndicator);
+            card.appendChild(nopeIndicator);
+            
+            return card;
+        }
+
+        // Add drag events to a card
+        function addDragEvents(card) {
+            card.addEventListener('mousedown', startDrag);
+            card.addEventListener('touchstart', startDrag, { passive: false });
+            
+            card.addEventListener('mousemove', drag);
+            card.addEventListener('touchmove', drag, { passive: false });
+            
+            card.addEventListener('mouseup', endDrag);
+            card.addEventListener('mouseleave', endDrag);
+            card.addEventListener('touchend', endDrag);
+        }
+
+        // Start dragging
+        function startDrag(e) {
+            if (swipesLeft <= 0) return;
+            
+            isDragging = true;
+            currentCard.classList.add('moving');
+            
+            const clientX = e.clientX || e.touches[0].clientX;
+            const clientY = e.clientY || e.touches[0].clientY;
+            
+            startX = clientX;
+            startY = clientY;
+            
+            e.preventDefault();
+        }
+
+        // During drag
+        function drag(e) {
+            if (!isDragging) return;
+            
+            const clientX = e.clientX || e.touches[0].clientX;
+            const clientY = e.clientY || e.touches[0].clientY;
+            
+            moveX = clientX - startX;
+            moveY = clientY - startY;
+            
+            const rotate = moveX / 15; // More natural rotation
+            const opacity = 1 - Math.min(Math.abs(moveX) / 200, 0.5); // Fade out slightly
+            
+            currentCard.style.transform = `translate(${moveX}px, ${moveY}px) rotate(${rotate}deg)`;
+            currentCard.style.opacity = opacity;
+            
+            // Show/hide swipe indicators
+            const likeIndicator = currentCard.querySelector('.like-indicator');
+            const nopeIndicator = currentCard.querySelector('.nope-indicator');
+            
+            if (moveX > 50) {
+                likeIndicator.classList.add('show-indicator');
+                nopeIndicator.classList.remove('show-indicator');
+            } else if (moveX < -50) {
+                nopeIndicator.classList.add('show-indicator');
+                likeIndicator.classList.remove('show-indicator');
+            } else {
+                likeIndicator.classList.remove('show-indicator');
+                nopeIndicator.classList.remove('show-indicator');
+            }
+            
+            e.preventDefault();
+        }
+
+        // End dragging
+        function endDrag(e) {
+            if (!isDragging) return;
+            isDragging = false;
+            currentCard.classList.remove('moving');
+            
+            const threshold = 100;
+            
+            if (Math.abs(moveX) > threshold) {
+                // Swipe left or right
+                const direction = moveX > 0 ? 'right' : 'left';
+                swipeCard(direction);
+            } else {
+                // Return to original position
+                currentCard.style.transition = 'transform 0.5s, opacity 0.5s';
+                currentCard.style.transform = 'translate(0, 0) rotate(0deg)';
+                currentCard.style.opacity = '1';
+                
+                // Hide indicators
+                currentCard.querySelector('.like-indicator').classList.remove('show-indicator');
+                currentCard.querySelector('.nope-indicator').classList.remove('show-indicator');
+                
+                setTimeout(() => {
+                    currentCard.style.transition = '';
+                }, 500);
+            }
+        }
+
+        // Swipe card in direction
+        function swipeCard(direction) {
+            if (swipesLeft <= 0 || !currentCard) return;
+            
+            swipesLeft--;
+            updateSwipeCount();
+            
+            // Play swipe sound
+            playSound(swipeSound);
+            
+            currentCard.style.transition = 'transform 0.5s, opacity 0.5s';
+            currentCard.classList.add(direction === 'right' ? 'swipe-right' : 'swipe-left');
+            currentCard.style.opacity = '0';
+            
+            // Check for match (30% chance when swiping right)
+            if (direction === 'right' && Math.random() < 0.3) {
+                const baddieId = parseInt(currentCard.dataset.id);
+                currentMatch = baddies.find(b => b.id === baddieId);
+                setTimeout(() => {
+                    playSound(matchSound); // Play match sound
+                    showMatchModal();
+                }, 500);
+            }
+            
+            // Remove card after animation
+            setTimeout(() => {
+                cardsContainer.removeChild(currentCard);
+                loadNextCard();
+            }, 500);
+        }
+
+        // Show no more cards message
+       function showNoMoreCards() {
+    cardsContainer.innerHTML = '';
+    
+    // Create the Proof of Gooner message element
+    const proofElement = document.createElement('div');
+    proofElement.className = 'no-more-cards';
+    proofElement.innerHTML = `
+        <h3 class="no-more-title">Proof of Gooner</h3>
+        <p class="no-more-text">You exhausted your swipes! Touch grass and come back tomorrow.</p>
+    `;
+    
+    // Add custom styling
+    proofElement.style.border = '2px solid #e91e63';
+    proofElement.style.boxShadow = '0 5px 15px rgba(233, 30, 99, 0.3)';
+    proofElement.style.fontStyle = 'italic';
+    
+    cardsContainer.appendChild(proofElement);
+    swipeLeftBtn.disabled = true;
+    swipeRightBtn.disabled = true;
+}
+
+        // Update swipe count display
+        function updateSwipeCount() {
+            swipeCountEl.textContent = `Swipes left today: ${swipesLeft}`;
+        }
+
+        // Show match modal
+        function showMatchModal() {
+            userMessageCount = 0;
+            replyInput.disabled = false;
+            replyInput.placeholder = "Type your reply...";
+            sendBtn.disabled = false;
+            matchImg.src = currentMatch.img;
+            matchName.textContent = currentMatch.name;
+            
+            // Show initial greeting from match
+            chatContainer.innerHTML = '';
+            typingIndicator.style.display = 'block';
+            
+            // Simulate "typing" before showing message
+            setTimeout(() => {
+                typingIndicator.style.display = 'none';
+                addMatchMessage(generatePersonalizedGreeting());
+            }, 1500);
+            
+            matchModal.style.display = 'flex';
+        }
+
+        // Generate a personalized greeting
+        function generatePersonalizedGreeting() {
+            const greetings = [
+                `Hey there! 😊 I'm ${currentMatch.name}. So glad we matched! What are you up to today?`,
+                `Hi! 👋 I'm ${currentMatch.name}. Excited to connect with you! How's your day going?`,
+                `Hey! I'm ${currentMatch.name}. Great to match with you! What do you like to do for fun?`,
+                `Hi there! I'm ${currentMatch.name}. Awesome that we matched! What are your plans for the weekend?`,
+                `Hey! 😄 I'm ${currentMatch.name}. So happy we connected! Tell me something interesting about yourself.`
+            ];
+            
+            return greetings[Math.floor(Math.random() * greetings.length)];
+        }
+
+        // Advanced AI chatbot response generator
+        function generateAIResponse(userMessage) {
+            // Convert to lowercase for easier matching
+            const lowerMsg = userMessage.toLowerCase();
+            const matchName = currentMatch.name;
+            
+            // Define response patterns
+            const responsePatterns = [
+                {
+                    patterns: [/hello|hi|hey|howdy|yo|sup|what's up|good morning|good afternoon|good evening/i],
+                    responses: [
+                        "Hey there! 😊 How are you doing today?",
+                        `Hi ${matchName}! here. How's your day going?`,
+                        "Hello! What's new with you?",
+                        "Hey! How are things?"
+                    ]
+                },
+                {
+                    patterns: [/how are you|how r u|hows it going|how's life/i],
+                    responses: [
+                        "I'm doing great, thanks for asking! How about you?",
+                        "Life's good! Just enjoying the day. How about you?",
+                        "I'm fantastic! Especially now that I'm chatting with you 😊"
+                    ]
+                },
+                {
+                    patterns: [/what are you doing|what you doing|what are u up to|whats good|wyd|what are you up to/i],
+                    responses: [
+                        "Just thinking about our next conversation! What about you?",
+                        "Enjoying a quiet moment. How about you?",
+                        "Nothing much, just missing Mugiwara's back rubs",
+                        "Thinking about you actually 😉 What are you up to?"
+                    ]
+                },
+                {
+                    patterns: [/i like|i love|i enjoy|i'm into|i'm passionate about/i],
+                    responses: [
+                        "That's awesome! Tell me more about that.",
+                        `I love that too! What got you interested in that?`,
+                        "That sounds fascinating! How did you get into it?"
+                    ]
+                },
+                {
+                    patterns: [/tell me about yourself|who are you|what do you do|about you/i],
+                    responses: [
+                        `Well, I'm ${matchName}, ${currentMatch.age}, and I'm really into ${currentMatch.interests.join(', ')}. What else would you like to know?`,
+                        "I'm all about good conversations and great connections. What about you?",
+                        `I'm a ${currentMatch.age}-year-old who loves ${currentMatch.interests[0]} and ${currentMatch.interests[1]}. What's your story?`
+                    ]
+                },
+                {
+                    patterns: [/hobby|hobbies|interest|interests|passion|passions/i],
+                    responses: [
+                        `I'm really into ${currentMatch.interests.join(', ')}. What about you? What are your passions?`,
+                        `I love ${currentMatch.interests[Math.floor(Math.random() * currentMatch.interests.length)]}. What do you enjoy doing?`,
+                        `I'm passionate about ${currentMatch.interests[0]}. What are your interests?`
+                    ]
+                },
+                {
+                    patterns: [/music|song|songs|band|artist|spotify|playlist|album|genre|listen to|hearing/i],
+                    responses: [
+                        "I'm a music lover! What genres do you like?",
+                        "Music is life! What's your favorite song right now?",
+                        "I'm always listening to something new. What are you into?"
+                    ]
+                },
+                {
+                    patterns: [/movie|film|cinema|netflix|hulu|disney|streaming|watch|viewing|screen/i],
+                    responses: [
+                        "I'm a big movie buff! What's the last great film you watched?",
+                        "Love movies! What's your all-time favorite?",
+                        "I could talk about movies all day. What do you like to watch?"
+                    ]
+                },
+                {
+                    patterns: [/food|eat|dinner|lunch|breakfast|snack|cuisine|restaurant|dish|cook|recipe|meal/i],
+                    responses: [
+                        "I'm a foodie! What's your favorite cuisine?",
+                        "Talking about food always makes me hungry! What's your go-to meal?",
+                        "I love trying new foods. What's the best thing you've eaten recently?"
+                    ]
+                },
+                {
+                    patterns: [/travel|trip|vacation|journey|adventure|explore|destination|place|city|country|world|globe/i],
+                    responses: [
+                        "I love traveling! What's the most beautiful place you've visited?",
+                        "Travel is my passion! Where would you go if you could travel anywhere?",
+                        "I'm always planning my next trip. What's your dream destination?"
+                    ]
+                },
+                {
+                    patterns: [/work|job|career|profession|office|business|company|industry|occupation|vocation/i],
+                    responses: [
+                        "Work is important, but I prefer talking about fun stuff! What do you enjoy outside of work?",
+                        "I like to keep work and personal life separate. What are your hobbies?",
+                        "I prefer to focus on the fun parts of life. What do you do for fun?"
+                    ]
+                },
+                {
+                    patterns: [/(?:^|\s)(fuck|shit|wtf|retard|asshole|idiot|ode)(?:$|\s|[.!?,;])/i],
+                    responses: [
+                        "Hey watch your language, dont hurt my feelings🥺",
+                        "Thats not very nice, i dont like that word",
+                        "Dont talk like that baby, Language!!"
+                    ]
+                },
+                {
+                    patterns: [/joke|funny|laugh|humor|comedy|hilarious|pun|rofl|lol/i],
+                    responses: [
+                        "Why don't scientists trust atoms? Because they make up everything! 😄",
+                        "What do you call a fake noodle? An impasta! 🤣",
+                        "I'm not a comedian, but I try to be punny! 😉"
+                    ]
+                }
+            ];
+            
+            // Default responses
+            const defaultResponses = [
+                "That's interesting! Tell me more.",
+                "I'd love to hear more about that.",
+                "That sounds great! What else have you been up to?",
+                "Thanks for sharing! What else is new with you?",
+                "That's awesome! What else do you enjoy doing?",
+                "I appreciate you sharing that! How was your day?",
+                "That's really cool! What are your plans for the rest of the week?",
+                "I'd love to know more about that!",
+                "That's fascinating! What got you interested in that?",
+                "That sounds like fun! Have you been doing that for long?"
+            ];
+            
+            // Find a matching pattern
+            for (const patternGroup of responsePatterns) {
+                for (const pattern of patternGroup.patterns) {
+                    if (pattern.test(lowerMsg)) {
+                        return patternGroup.responses[Math.floor(Math.random() * patternGroup.responses.length)];
+                    }
+                }
+            }
+            
+            // If no pattern matches, return a default response
+            return defaultResponses[Math.floor(Math.random() * defaultResponses.length)];
+        }
+
+        // Add a message from the match to the chat
+        function addMatchMessage(text) {
+            const messageElement = document.createElement('div');
+            messageElement.className = 'message their-message';
+            messageElement.textContent = text;
+            chatContainer.appendChild(messageElement);
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+        }
+
+        // Send a message
+        function sendMessage() {
+            const message = replyInput.value.trim();
+            if (!message) return;
+            
+            // Play sound for sending message
+            playSound(buttonSound);
+            
+            // Add user's message
+            const messageElement = document.createElement('div');
+            messageElement.className = 'message your-message';
+            messageElement.textContent = message;
+            chatContainer.appendChild(messageElement);
+            
+            // Clear input
+            replyInput.value = '';
+            userMessageCount++;
+            
+            // Show typing indicator
+            typingIndicator.style.display = 'block';
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+            
+            // Generate and add personalized reply after a short delay
+            setTimeout(() => {
+                typingIndicator.style.display = 'none';
+                
+                if (userMessageCount >= 3) {
+                    // Final message after 3 replies
+                    const finalMessages = [
+                        "Touch some grass, can't believe you tryna get down with an LLM",
+                        "Go back to Twitter lol",
+                        "Look at this guy...get a life Big bro",
+                        "Is this what u wanna do with your Life?. I think its best to go back to supporting Succinct",
+                        "AI ain't gonna love you back. Go meet real people!"
+                    ];
+                    const finalMessage = finalMessages[Math.floor(Math.random() * finalMessages.length)];
+                    addMatchMessage(finalMessage);
+                    
+                    // Disable chat
+                    replyInput.disabled = true;
+                    replyInput.placeholder = "Chat disabled";
+                    sendBtn.disabled = true;
+                } else {
+                    // Normal AI response
+                    const reply = generateAIResponse(message);
+                    addMatchMessage(reply);
+                }
+            }, 1000 + Math.random() * 1500);
+        }
+
+
+        // Initialize the app
+        init();
+    </script>
+</body>
+</html>
